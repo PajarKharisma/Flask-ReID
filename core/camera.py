@@ -1,6 +1,4 @@
 import cv2
-ds_factor=0.6
-
 import os
 import imutils
 
@@ -13,6 +11,11 @@ class VideoCamera(object):
     
     def get_frame(self):
         success, image = self.video.read()
-        image = imutils.resize(image, width=960)
-        ret, jpeg = cv2.imencode('.jpg', image)
-        return jpeg.tobytes()
+        jpeg = None
+        if success:
+            curr_frame = self.video.get(cv2.CAP_PROP_POS_FRAMES)
+            image = imutils.resize(image, width=960)
+            ret, jpeg = cv2.imencode('.jpg', image)
+            jpeg = jpeg.tobytes()
+
+        return jpeg, success

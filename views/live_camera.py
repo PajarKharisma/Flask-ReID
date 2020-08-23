@@ -10,9 +10,12 @@ def index_live():
 
 def gen_live(camera):
     while True:
-        frame = camera.get_frame()
-        yield (b'--frame\r\n'
+        frame, success = camera.get_frame()
+        if success:
+            yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+        else:
+            break
 
 @app.route('/video_feed_live/')
 def video_feed_live():
