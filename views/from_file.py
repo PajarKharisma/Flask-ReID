@@ -8,7 +8,7 @@ from app import app
 from core.camera import VideoCamera
 
 UPLOAD_FOLDER = 'temp/'
-ALLOWED_EXTENSIONS = {'mp4', 'avi', '3gp', 'jpg'}
+ALLOWED_EXTENSIONS = {'mp4', 'avi', '3gp'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def allowed_file(filename):
