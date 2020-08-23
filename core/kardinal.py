@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 import random
 import uuid
-from core.util import process_result, load_images, resize_image, cv_image2tensor, transform_result
+from core.util import process_result, load_images, resize_image, cv_image2tensor, transform_result, load_reid_model
 
 import core.darknet as darknet
 import core.siamese as siamese
@@ -77,10 +77,8 @@ class Kardinal():
         self.yolo_model.to(config.device)
         self.trans = transforms.Compose([transforms.ToTensor()])
 
-        self.reid_model = siamese.BstCnn()
-        self.reid_model.load_state_dict(torch.load(config.reid_models_path, map_location=config.device))
-        self.reid_model.to(config.device)
-        self.reid_model.eval()
+        reid_model_arch   = siamese.BstCnn()
+        self.reid_model = load_reid_model(config.reid_models_path, reid_model_arch, config.device)
 
         self.colors = pkl.load(open(config.colors_path, "rb"))
         self.classes = self.load_classes(config.class_names_path)
@@ -137,7 +135,7 @@ class Kardinal():
         
         euclidean_distance = F.pairwise_distance(tensor1, tensor2)
         dist = float(euclidean_distance.item())
-        return (dist - 0) / (max_val - 0)
+        return (dist - 0) / (self.reid_model['max_dist'] - 0)
 
     def detected(self, img, curr_frame):
         self.curr_databases.clear()
@@ -160,7 +158,7 @@ class Kardinal():
                 tensor_in = Variable(tensor_in).to(config.device)
 
                 with torch.no_grad():
-                    tensor_out = self.reid_model.forward_once(tensor_in).cpu().numpy()
+                    tensor_out = self.reid_model['model'].forward_once(tensor_in).cpu().numpy()
 
                 if len(self.databases) < 1:
                     color = random.choice(self.colors)
@@ -178,7 +176,7 @@ class Kardinal():
                     sim_person = None
                     for person in self.databases:
                         dist = self.get_dist(person.get_tensor(), tensor_out)
-                        if curr_frame != person.get_frame and dist <= config.reid_thresh and dist < min_dist:
+                        if curr_frame != person.get_frame and dist <= self.reid_model['threshold'] and dist < min_dist:
                             min_dist = dist
                             sim_person = person
                             # sim_person.set_label(person.get_label())

@@ -143,3 +143,16 @@ def transform_result(detections, imgs, input_size):
     detections[:, [2, 4]] = torch.min(detections[:, [2, 4]], img_dims[:, 0].unsqueeze(-1))
 
     return detections
+
+def load_reid_model(load_dir, model_arch, device):
+    checkpoint = torch.load(load_dir, map_location=device)
+    model = {}
+    model_arch.load_state_dict(checkpoint['state_dict'])
+    model_arch.to(device)
+    model_arch.eval()
+
+    model['model'] = model_arch
+    model['max_dist'] = checkpoint['max_dist']
+    model['threshold'] = checkpoint['threshold']
+
+    return model
