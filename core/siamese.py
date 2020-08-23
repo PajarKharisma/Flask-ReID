@@ -40,25 +40,12 @@ class BstCnn(nn.Module):
 
         self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
 
-        self.avgpool = nn.AdaptiveAvgPool2d((40, 15))
+        self.avgpool = nn.AdaptiveAvgPool2d((16, 8)) # full images
 
         self.fc = nn.Sequential(
-            nn.Linear(16*40*15, 4096),
+            nn.Linear(16*16*8, 512), # full images
             nn.ReLU(inplace=True),
-            nn.Dropout(p=0.2),
-            
-            nn.Linear(4096, 2048),
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=0.2),
-
-            nn.Linear(2048, 1024),
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=0.2),
-            
-            nn.Linear(1024, 512),
-            nn.ReLU(inplace=True)
-            # nn.Softmax(dim=1)
-            # nn.Sigmoid()
+            nn.Linear(512, 256)
         )
 
         self._initialize_weights()

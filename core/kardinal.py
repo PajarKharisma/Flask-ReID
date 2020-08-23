@@ -3,6 +3,7 @@ import torch.nn.functional as F
 import torchvision.transforms as transforms
 from torch.autograd import Variable
 
+import os
 import sys
 import pickle as pkl
 import cv2
@@ -15,11 +16,12 @@ import core.darknet as darknet
 import core.siamese as siamese
 
 class config():
-    yolo_cfg_path = 'config/yolov3.cfg'
-    yolo_models_path = 'models/yolov3.weights'
-    reid_models_path = 'models/re-id.pth'
-    class_names_path = 'config/coco.names'
-    colors_path = 'config/pallete'
+    root_dir = os.getcwd()
+    yolo_cfg_path = root_dir + '/config/yolov3.cfg'
+    yolo_models_path = root_dir + '/models/yolov3.weights'
+    reid_models_path = root_dir + '/models/re-id.pth'
+    class_names_path = root_dir + '/config/coco.names'
+    colors_path = root_dir + '/config/pallete'
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     cuda = True if torch.cuda.is_available() else False
@@ -130,16 +132,12 @@ class Kardinal():
         return imgs
 
     def get_dist(self, input1, input2):
-        # print(input1)
-        # print(input2)
         tensor1 = torch.from_numpy(input1)
         tensor2 = torch.from_numpy(input2)
         
         euclidean_distance = F.pairwise_distance(tensor1, tensor2)
-        d = float(euclidean_distance.item())
-        d = abs((1 / (1 + d)) - 1)
-
-        return d
+        dist = float(euclidean_distance.item())
+        return (dist - 0) / (max_val - 0)
 
     def detected(self, img, curr_frame):
         self.curr_databases.clear()
@@ -156,6 +154,7 @@ class Kardinal():
 
             for i, img_crop in enumerate(imgs):
                 # cv2.imwrite('crop/'+str(uuid.uuid4().hex)+'.jpg', imgg)
+
                 img_crop['img'] = cv2.resize(img_crop['img'], config.img_size)
                 tensor_in = cv_image2tensor(img=img_crop['img'], transform=self.trans, size=None)
                 tensor_in = Variable(tensor_in).to(config.device)
