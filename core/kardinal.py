@@ -17,20 +17,19 @@ import core.siamese as siamese
 
 class config():
     root_dir = os.getcwd()
-    yolo_cfg_path = root_dir + '/config/yolov3.cfg'
-    yolo_models_path = root_dir + '/models/yolov3.weights'
-    reid_models_path = root_dir + '/models/re-id.pth'
-    class_names_path = root_dir + '/config/coco.names'
-    colors_path = root_dir + '/config/pallete'
+    yolo_cfg_path = './config/yolov3.cfg'
+    yolo_models_path = './models/yolov3.weights'
+    reid_models_path = './models/re-id.pth'
+    class_names_path = './config/coco.names'
+    colors_path =  './config/pallete'
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     cuda = True if torch.cuda.is_available() else False
 
-    reid_thresh = 0.5
     obj_thresh = 0.5
     nms_thresh = 0.4
 
-    img_size = (60,160)
+    img_size = (60,128)
 
 class PersonId():
     def __init__(self, label='', tensor=None, color=None, bbox=None, frame=1):
@@ -75,8 +74,8 @@ class Kardinal():
         self.yolo_model = darknet.Darknet(config.yolo_cfg_path)
         self.yolo_model.load_weights(config.yolo_models_path)
         self.yolo_model.to(config.device)
-        self.trans = transforms.Compose([transforms.ToTensor()])
 
+        self.trans = transforms.Compose([transforms.ToTensor()])
         reid_model_arch   = siamese.BstCnn()
         self.reid_model = load_reid_model(config.reid_models_path, reid_model_arch, config.device)
 
@@ -213,7 +212,9 @@ class Kardinal():
 
     def yolov3(self, img):
         # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img_tensors = cv_image2tensor(img, self.input_size)
+        # print(config.yolo_models_path)
+
+        img_tensors = cv_image2tensor(img, None, self.input_size)
         img_tensors = Variable(img_tensors).to(config.device)
 
         detections = self.yolo_model(img_tensors, config.cuda).cpu()

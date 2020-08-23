@@ -7,6 +7,7 @@ import core.kardinal as krd
 class VideoCamera(object):
     def __init__(self, url=1):
         self.video = cv2.VideoCapture(url)
+        self.kardinal = krd.Kardinal()
     
     def __del__(self):
         self.video.release()
@@ -17,7 +18,10 @@ class VideoCamera(object):
         if success:
             curr_frame = self.video.get(cv2.CAP_PROP_POS_FRAMES)
             image = imutils.resize(image, width=960)
-            image = krd.detected(image, curr_frame)
+
+            image = self.kardinal.detected(image, curr_frame)
+            # image = self.kardinal.yolov3(image)
+            
             ret, jpeg = cv2.imencode('.jpg', image)
             jpeg = jpeg.tobytes()
 

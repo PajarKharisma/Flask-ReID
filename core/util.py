@@ -99,7 +99,7 @@ def cv_image2tensor(img, transform=None, size=None):
     if size is not None:
         img = resize_image(img, size)
     # remove
-    if trans:
+    if transform is not None:
         img = transform(img)
     else:
         img = img[:, :, ::-1].transpose((2, 0, 1)).copy()
