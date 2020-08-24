@@ -1,3 +1,2 @@
 import views.home_view
-import views.live_camera
-import views.from_file
+import views.reid_view

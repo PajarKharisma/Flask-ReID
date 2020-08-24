@@ -17,9 +17,9 @@ class VideoCamera(object):
         jpeg = None
         if success:
             curr_frame = self.video.get(cv2.CAP_PROP_POS_FRAMES)
-            image = imutils.resize(image, width=960)
+            image = imutils.resize(image, width=640)
 
-            image = self.kardinal.detected(image, curr_frame)
+            # image = self.kardinal.detected(image, curr_frame)
             # image = self.kardinal.yolov3(image)
             
             ret, jpeg = cv2.imencode('.jpg', image)

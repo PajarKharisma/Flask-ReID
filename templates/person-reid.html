@@ -1,0 +1,62 @@
+{% extends "layouts/base.html" %}
+<!-- Block title untuk penamaan judul halaman -->
+{% block title %} Home {% endblock %}
+<!-- Block content untuk konten body halaman -->
+{% block content %}
+<div id="page-wrapper">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <p class="text-warning">WARNING !!!</p>
+                        <ul class=flashes>
+                            {% for message in messages %}
+                                <li>{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endwith %}
+                <hr>
+                <h4>Person Re-Identification</h4>
+                <hr>
+                <form action="/person-reid" method="POST" enctype="multipart/form-data">
+                    <div class="form-group col-sm-6">
+                        <select class="form-control" id="video_src" name="video_src">
+                            <option value="0" selected="">Pilih Sumber Video</option>
+                            <option value="1">URL</option>
+                            <option value="2">File</option>
+                        </select>
+                        <br>
+                        <input style="display: none;" type="text" name="url" class="form-control" id="input_url" placeholder="Masukan URL (Ketik 0 jika menggunakan kamera)">
+                        <input style="display: none;" id="input_file" class="form-control-lg" type="file" name="video">
+                        <br>
+                        <button type="submit" class="btn btn-primary">Analyze</button>
+                    </div>
+                </form>
+                {% if url %}
+                    <hr>
+                    <img id="bg" class="center" src="/video_feed/{{ url }}">
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $("#video_src").change(function () {
+        if(this.value == 1){
+            $("#input_file").hide();
+            $("#input_url").show();
+        } else if(this.value == 2){
+            $("#input_file").show();
+            $("#input_url").hide();
+        } else{
+            $("#input_file").hide();
+            $("#input_url").hide();
+        }
+    });
+</script>
+{% endblock %}
