@@ -1,0 +1,67 @@
+{% extends "layouts/base.html" %}
+<!-- Block title untuk penamaan judul halaman -->
+{% block title %} Home {% endblock %}
+<!-- Block content untuk konten body halaman -->
+{% block content %}
+<div id="page-wrapper">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <p class="text-warning">WARNING !!!</p>
+                        <ul class=flashes>
+                            {% for message in messages %}
+                                <li>{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endwith %}
+                <hr>
+                <h4>List of Identified Person</h4>
+                <hr>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <td>Image</td>
+                            <td>Id</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in results %}
+                            <tr>
+                                <td>
+                                    <img src="/static/list/{{ result['img'] }}" alt="">
+                                </td>
+                                <td>
+                                    {{ result['id'] }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if url %}
+                    <img id="bg" class="center" src="/video_feed/{{ url }}">
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $("#video_src").change(function () {
+        if(this.value == 1){
+            $("#input_file").hide();
+            $("#input_url").show();
+        } else if(this.value == 2){
+            $("#input_file").show();
+            $("#input_url").hide();
+        } else{
+            $("#input_file").hide();
+            $("#input_url").hide();
+        }
+    });
+</script>
+{% endblock %}

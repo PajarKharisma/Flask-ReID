@@ -20,23 +20,28 @@
                 <hr>
                 <h4>Person Re-Identification</h4>
                 <hr>
-                <form action="/person-reid" method="POST" enctype="multipart/form-data">
+                <form action="/reid-analyze" method="POST" enctype="multipart/form-data">
                     <div class="form-group col-sm-6">
                         <select class="form-control" id="video_src" name="video_src">
                             <option value="0" selected="">Pilih Sumber Video</option>
                             <option value="1">URL</option>
                             <option value="2">File</option>
+                            <option value="3">CCTV</option>
                         </select>
                         <br>
+                        <select style="display: none;" class="form-control" id="input_cctv" name="cctv">
+                            {% for cctv_id in data['cctv_ids'] %}
+                                <option value="{{ cctv_id['cctvId'] }}">{{ cctv_id['cctvName'] }}</option>
+                            {% endfor %}
+                        </select>
                         <input style="display: none;" type="text" name="url" class="form-control" id="input_url" placeholder="Masukan URL (Ketik 0 jika menggunakan kamera)">
                         <input style="display: none;" id="input_file" class="form-control-lg" type="file" name="video">
                         <br>
                         <button type="submit" class="btn btn-primary">Analyze</button>
                     </div>
                 </form>
-                {% if url %}
-                    <hr>
-                    <img id="bg" class="center" src="/video_feed/{{ url }}">
+                {% if data['filename'] %}
+                    <img id="bg" class="center" src="/video_feed/{{ data['input_type'] }}/{{ data['filename'] }}">
                 {% endif %}
             </div>
         </div>
@@ -48,14 +53,21 @@
 <script>
     $("#video_src").change(function () {
         if(this.value == 1){
-            $("#input_file").hide();
             $("#input_url").show();
-        } else if(this.value == 2){
-            $("#input_file").show();
-            $("#input_url").hide();
-        } else{
             $("#input_file").hide();
+            $("#input_cctv").hide();
+        } else if(this.value == 2){
             $("#input_url").hide();
+            $("#input_file").show();
+            $("#input_cctv").hide();
+        } else if(this.value == 3){
+            $("#input_url").hide();
+            $("#input_file").hide();
+            $("#input_cctv").show();
+        }else{
+            $("#input_url").hide();
+            $("#input_file").hide();
+            $("#input_cctv").show();
         }
     });
 </script>

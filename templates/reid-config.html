@@ -1,0 +1,42 @@
+{% extends "layouts/base.html" %}
+<!-- Block title untuk penamaan judul halaman -->
+{% block title %} Home {% endblock %}
+<!-- Block content untuk konten body halaman -->
+{% block content %}
+<div id="page-wrapper">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <p class="text-warning">WARNING !!!</p>
+                        <ul class=flashes>
+                            {% for message in messages %}
+                                <li>{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endwith %}
+                <hr>
+                <h4>Configuration</h4>
+                <hr>
+                <form action="/reid-config" method="POST">
+                    <div class="form-group col-sm-6">
+                        <select class="form-control" id="" name="config_mode">
+                            <option value="0" selected="">Select Mode</option>
+                            <option value="1">Video</option>
+                            <option value="2">Person Reidentification</option>
+                            <option value="3">People Counting</option>
+                        </select>
+                        <br>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

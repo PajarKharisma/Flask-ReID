@@ -51,7 +51,7 @@ def process_result(detection, obj_threshhold, nms_threshhold):
 
     final_output = []
     for i,out in enumerate(output):
-        if out[5] > 0.9:
+        if out[5] > 0.96:
             final_output.append(out)
 
     if len(final_output) > 0:
