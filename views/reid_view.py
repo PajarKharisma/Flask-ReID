@@ -35,8 +35,8 @@ def index_file():
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             else:
                 flash('Extension not valid')
-            return redirect(request.url)
         elif request.form['video_src'] == '3':
+            print('masuk 3')
             filename = request.form['cctv']
         else:
             flash('Anda belum memilih sumber video')
