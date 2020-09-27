@@ -22,11 +22,12 @@ class config():
     reid_models_path = './models/re-id.pth'
     class_names_path = './config/coco.names'
     colors_path =  './config/pallete'
+    list_dir = './static/list'
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     cuda = True if torch.cuda.is_available() else False
 
-    obj_thresh = 0.5
+    obj_thresh = 0.96
     nms_thresh = 0.4
 
     img_size = (60,128)
@@ -69,8 +70,47 @@ class PersonId():
     def get_frame(self):
         return self.frame
 
+class PersonId():
+    def __init__(self, label='', tensor=None, color=None, bbox=None, frame=1):
+        self.label = label
+        self.tensor = tensor
+        self.color = color
+        self.bbox = bbox
+        self.frame = frame
+
+    def set_label(self, label):
+        self.label = label
+    
+    def set_tensor(self, tensor):
+        self.tensor = tensor
+
+    def set_color(self, color):
+        self.color = color
+
+    def set_bbox(self, bbox):
+        self.bbox = bbox
+
+    def set_frame(self, frame):
+        self.frame = frame
+
+    def get_label(self):
+        return self.label
+    
+    def get_tensor(self):
+        return self.tensor
+
+    def get_color(self):
+        return self.color
+
+    def get_bbox(self):
+        return self.bbox
+
+    def get_frame(self):
+        return self.frame
+
 class Kardinal():
     def __init__(self, obj_thresh=config.obj_thresh, nms_thresh=config.nms_thresh):
+        print('Processed by {}'.format(config.device))
         self.yolo_model = darknet.Darknet(config.yolo_cfg_path)
         self.yolo_model.load_weights(config.yolo_models_path)
         self.yolo_model.to(config.device)
@@ -78,6 +118,8 @@ class Kardinal():
         self.trans = transforms.Compose([transforms.ToTensor()])
         reid_model_arch   = siamese.BstCnn()
         self.reid_model = load_reid_model(config.reid_models_path, reid_model_arch, config.device)
+        self.filter_kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
+        self.count_person = 0
 
         self.colors = pkl.load(open(config.colors_path, "rb"))
         self.classes = self.load_classes(config.class_names_path)
@@ -88,6 +130,9 @@ class Kardinal():
 
         self.databases = []
         self.curr_databases = []
+
+        self.people_count = 0
+        self.count_prev = 0
 
     def load_classes(self, namesfile):
         fp = open(namesfile, "r")
@@ -110,6 +155,9 @@ class Kardinal():
         # kotak text
         cv2.rectangle(img, p3, p4, color, -1)
         cv2.putText(img, label, p1, cv2.FONT_HERSHEY_SIMPLEX, 1, [0, 0, 0], 1)
+
+    def draw_text(self, img, txt):
+        pass
 
     def crop_img(self, img, bboxs):
         imgs = []
@@ -137,80 +185,92 @@ class Kardinal():
         return (dist - 0) / (self.reid_model['max_dist'] - 0)
 
     def detected(self, img, curr_frame):
-        self.curr_databases.clear()
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img_tensors = cv_image2tensor(img=img, transform=None, size=self.input_size)
-        img_tensors = Variable(img_tensors).to(config.device)
+        if curr_frame % 12 == 0:
+            self.curr_databases.clear()
+            img_tensors = cv_image2tensor(img=img, transform=None, size=self.input_size)
+            img_tensors = Variable(img_tensors).to(config.device)
 
-        detections = self.yolo_model(img_tensors, config.cuda).cpu()
-        detections = process_result(detections, self.obj_thresh, self.nms_thresh)
+            detections = self.yolo_model(img_tensors, config.cuda).cpu()
+            detections = process_result(detections, self.obj_thresh, self.nms_thresh)
 
-        if len(detections) > 0:
-            detections = transform_result(detections, [img], self.input_size)
-            imgs = self.crop_img(img, detections)
+            if len(detections) > 0:
+                detections = transform_result(detections, [img], self.input_size)
+                imgs = self.crop_img(img, detections)
 
-            for i, img_crop in enumerate(imgs):
-                # cv2.imwrite('crop/'+str(uuid.uuid4().hex)+'.jpg', imgg)
+                for i, img_crop in enumerate(imgs):
+                    # cv2.imwrite('crop/'+str(uuid.uuid4().hex)+'.jpg', imgg)
 
-                img_crop['img'] = cv2.resize(img_crop['img'], config.img_size)
-                tensor_in = cv_image2tensor(img=img_crop['img'], transform=self.trans, size=None)
-                tensor_in = Variable(tensor_in).to(config.device)
+                    img_crop['img'] = cv2.resize(img_crop['img'], config.img_size)
+                    img_crop['img'] = cv2.filter2D(img_crop['img'], -1, self.filter_kernel)
+                    tensor_in = cv_image2tensor(img=img_crop['img'], transform=self.trans, size=None)
+                    tensor_in = Variable(tensor_in).to(config.device)
 
-                with torch.no_grad():
-                    tensor_out = self.reid_model['model'].forward_once(tensor_in).cpu().numpy()
+                    with torch.no_grad():
+                        tensor_out = self.reid_model['model'].forward_once(tensor_in).cpu().numpy()
 
-                if len(self.databases) < 1:
-                    color = random.choice(self.colors)
-                    person_id = PersonId(
-                        label='Person '+str(i+1),
-                        tensor=tensor_out,
-                        color=color,
-                        bbox=img_crop['bbox'],
-                        frame=curr_frame
-                    )
-                    self.databases.append(person_id)
-                    self.curr_databases.append(person_id)
-                else:
-                    min_dist = sys.float_info.max
-                    sim_person = None
-                    for person in self.databases:
-                        dist = self.get_dist(person.get_tensor(), tensor_out)
-                        if curr_frame != person.get_frame and dist <= self.reid_model['threshold'] and dist < min_dist:
-                            min_dist = dist
-                            sim_person = person
-                            # sim_person.set_label(person.get_label())
-                            # sim_person.set_color(person.get_color())
-                            sim_person.set_bbox(img_crop['bbox'])
-                            sim_person.set_tensor(tensor_out)
-                            sim_person.set_frame(curr_frame)
-
-                    if sim_person is not None:
-                        for person in self.databases:
-                            if person.get_label() == sim_person.get_label():
-                                person = sim_person
-                                self.curr_databases.append(person)
-                                break
-                    else:
-                        color = random.choice(self.colors)
-                        new_person = PersonId(
-                            label='Person '+str(len(self.databases)+1),
+                    if len(self.databases) < 1:
+                        # color = random.choice(self.colors)
+                        color = self.colors[self.count_person % len(self.colors)]
+                        person_id = PersonId(
+                            label='Person '+str(self.count_person + 1),
                             tensor=tensor_out,
                             color=color,
                             bbox=img_crop['bbox'],
                             frame=curr_frame
                         )
-                        self.databases.append(new_person)
-                        self.curr_databases.append(new_person)
+                        self.count_person += 1
+                        self.databases.append(person_id)
+                        self.curr_databases.append(person_id)
+                        cv2.imwrite('{}/{}.jpg'.format(config.list_dir, person_id.get_label), cv2.cvtColor(img_crop['img'], cv2.COLOR_RGB2BGR))
+                        print('Udah Nyimpen 1')
+                    else:
+                        min_dist = sys.float_info.max
+                        sim_person = None
+                        for person in self.databases:
+                            dist = self.get_dist(person.get_tensor(), tensor_out)
+                            if curr_frame != person.get_frame and dist <= self.reid_model['threshold'] and dist < min_dist:
+                                min_dist = dist
+                                sim_person = person
+                                # sim_person.set_label(person.get_label())
+                                # sim_person.set_color(person.get_color())
+                                sim_person.set_bbox(img_crop['bbox'])
+                                sim_person.set_tensor(tensor_out)
+                                sim_person.set_frame(curr_frame)
 
-            for person in self.curr_databases:
-                self.draw_bbox(img, person.get_bbox() , person.get_color(), person.get_label())
+                        if sim_person is not None:
+                            for person in self.databases:
+                                if person.get_label() == sim_person.get_label():
+                                    person = sim_person
+                                    self.curr_databases.append(person)
+                                    break
+                        else:
+                            # color = random.choice(self.colors)
+                            color = self.colors[self.count_person % len(self.colors)]
+                            new_person = PersonId(
+                                # label='Person '+str(len(self.databases)+1),
+                                label='Person '+str(self.count_person+1),
+                                tensor=tensor_out,
+                                color=color,
+                                bbox=img_crop['bbox'],
+                                frame=curr_frame
+                            )
+                            self.count_person += 1
+                            self.databases.append(new_person)
+                            self.curr_databases.append(new_person)
+                            cv2.imwrite('{}/{}.jpg'.format(config.list_dir, new_person.get_label), cv2.cvtColor(img_crop['img'], cv2.COLOR_RGB2BGR))
+                            print('Udah Nyimpen 1')
+            else:
+                self.databases.clear()
+        for person in self.curr_databases:
+            self.draw_bbox(img, person.get_bbox() , person.get_color(), person.get_label())
 
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         torch.cuda.empty_cache()
 
         return img
 
-    def yolov3(self, img):
+    def people_counting(self, img, curr_frame):
         # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         # print(config.yolo_models_path)
 
@@ -218,11 +278,21 @@ class Kardinal():
         img_tensors = Variable(img_tensors).to(config.device)
 
         detections = self.yolo_model(img_tensors, config.cuda).cpu()
-        detections = process_result(detections, self.obj_thresh, self.nms_thresh)
+        detections = process_result(detection=detections, obj_threshhold=0.8, nms_threshhold=self.nms_thresh)
 
         if len(detections) > 0:
+            if curr_frame % 12 == 0:
+                add_people = len(detections) - self.count_prev if len(detections) > self.count_prev else 0
+                self.people_count += add_people
+                self.count_prev = len(detections)
+
             detections = transform_result(detections, [img], self.input_size)
             for detection in detections:
                 self.draw_bbox(img, detection, (255,255,255), 'orang')
+        elif len(detections) < 1 and curr_frame % 12 == 0:
+            self.count_prev = 0
         
+        text = 'People count : {}'.format(self.people_count)
+        img = cv2.putText(img, text, (0,30), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,0,0), 2, cv2.LINE_AA)
+
         return img

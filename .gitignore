@@ -1,5 +1,7 @@
 /temp/
 !/temp/readme.md
 
+/static/list/*.jpg
+
 /models/
 !/models/readme.md

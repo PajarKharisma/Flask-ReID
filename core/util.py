@@ -50,15 +50,15 @@ def process_result(detection, obj_threshhold, nms_threshhold):
                 output = torch.cat((output, bboxes_cls))
 
     final_output = []
-    for i,out in enumerate(output):
-        if out[5] > 0.96:
-            final_output.append(out)
+    # for i,out in enumerate(output):
+    #     if out[5] > 0.96:
+    #         final_output.append(out)
 
-    if len(final_output) > 0:
-        final_output = torch.stack(final_output)
-    else:
-        final_output = torch.tensor([])
-    return final_output
+    # if len(final_output) > 0:
+    #     final_output = torch.stack(final_output)
+    # else:
+    #     final_output = torch.tensor([])
+    return output
 
 def to_corner(bboxes):
     newbboxes = bboxes.clone()
@@ -156,6 +156,6 @@ def load_reid_model(load_dir, model_arch, device):
 
     model['model'] = model_arch
     model['max_dist'] = checkpoint['max_dist']
-    model['threshold'] = checkpoint['threshold']
+    model['threshold'] = checkpoint['threshold'] + 0.2
 
     return model
