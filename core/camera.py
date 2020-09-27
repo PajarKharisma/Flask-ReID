@@ -6,7 +6,6 @@ import json
 import core.kardinal as krd
 
 CONFIG_FILE = 'static/config.json'
-LIST_DIR = 'static/list'
 
 class VideoCamera(object):
     def __init__(self, url=1):
@@ -17,12 +16,6 @@ class VideoCamera(object):
     
     def __del__(self):
         self.video.release()
-
-    def empty_dir(self, dir_name):
-        files = os.listdir(dir_name)
-        for file in files:
-            if file != '.gitignore':
-                os.remove('{}/{}'.format(dir_name, file))
     
     def get_frame(self):
         success, image = self.video.read()
@@ -32,10 +25,9 @@ class VideoCamera(object):
             image = imutils.resize(image, width=640)
 
             if self.config['mode'] == 2:
-                # self.empty_dir(LIST_DIR)
                 image = self.kardinal.detected(image, curr_frame)
             elif self.config['mode'] == 3:
-                image = self.kardinal.people_counting(image, curr_frame)
+                image = self.kardinal.people_counting(image, curr_frame-1)
             
             ret, jpeg = cv2.imencode('.jpg', image)
             jpeg = jpeg.tobytes()

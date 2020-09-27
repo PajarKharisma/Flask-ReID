@@ -20,17 +20,16 @@
                 <hr>
                 <h4>Configuration</h4>
                 <hr>
-                <form action="/reid-config" method="POST">
-                    <div class="form-group col-sm-6">
+                <form class="form-inline" action="/reid-config" method="POST">
+                    <div class="form-group mb-4">
                         <select class="form-control" id="" name="config_mode">
                             <option value="0" selected="">Select Mode</option>
                             <option value="1">Video</option>
                             <option value="2">Person Reidentification</option>
                             <option value="3">People Counting</option>
                         </select>
-                        <br>
-                        <button type="submit" class="btn btn-primary">Save</button>
                     </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </form>
             </div>
         </div>

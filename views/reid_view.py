@@ -10,6 +10,7 @@ from app import mysql
 from core.camera import VideoCamera
 
 UPLOAD_FOLDER = 'temp/'
+LIST_DIR = 'static/list'
 ALLOWED_EXTENSIONS = {'mp4', 'avi', '3gp'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -17,11 +18,17 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def empty_dir(dir_name):
+    files = os.listdir(dir_name)
+    for file in files:
+        if file != '.gitignore':
+            os.remove('{}/{}'.format(dir_name, file))
 
 @app.route('/reid-analyze', methods=["GET", "POST"])
 def index_file():
     data= {}
     if request.method == 'POST':
+        empty_dir(LIST_DIR)
         if request.form['video_src'] == '1':
             filename = request.form['url']
         elif request.form['video_src'] == '2':

@@ -199,7 +199,7 @@ class Kardinal():
                 imgs = self.crop_img(img, detections)
 
                 for i, img_crop in enumerate(imgs):
-                    # cv2.imwrite('crop/'+str(uuid.uuid4().hex)+'.jpg', imgg)
+                    # cv2.imwrite('static/list/'+str(uuid.uuid4().hex)+'.jpg', img_crop['img'])
 
                     img_crop['img'] = cv2.resize(img_crop['img'], config.img_size)
                     img_crop['img'] = cv2.filter2D(img_crop['img'], -1, self.filter_kernel)
@@ -222,7 +222,7 @@ class Kardinal():
                         self.count_person += 1
                         self.databases.append(person_id)
                         self.curr_databases.append(person_id)
-                        cv2.imwrite('{}/{}.jpg'.format(config.list_dir, person_id.get_label), cv2.cvtColor(img_crop['img'], cv2.COLOR_RGB2BGR))
+                        cv2.imwrite('{}/{}.jpg'.format(config.list_dir, person_id.get_label()), cv2.cvtColor(img_crop['img'], cv2.COLOR_RGB2BGR))
                         print('Udah Nyimpen 1')
                     else:
                         min_dist = sys.float_info.max
@@ -258,8 +258,8 @@ class Kardinal():
                             self.count_person += 1
                             self.databases.append(new_person)
                             self.curr_databases.append(new_person)
-                            cv2.imwrite('{}/{}.jpg'.format(config.list_dir, new_person.get_label), cv2.cvtColor(img_crop['img'], cv2.COLOR_RGB2BGR))
-                            print('Udah Nyimpen 1')
+                            cv2.imwrite('{}/{}.jpg'.format(config.list_dir, new_person.get_label()), cv2.cvtColor(img_crop['img'], cv2.COLOR_RGB2BGR))
+                            print('Udah Nyimpen 2')
             else:
                 self.databases.clear()
         for person in self.curr_databases:
