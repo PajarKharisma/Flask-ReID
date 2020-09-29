@@ -5,14 +5,12 @@ import json
 
 import core.kardinal as krd
 
-CONFIG_FILE = 'static/config.json'
-
 class VideoCamera(object):
-    def __init__(self, url=1):
+    def __init__(self, url=1, analyze_type='reid', disable_bb=0):
         self.video = cv2.VideoCapture(url)
         self.kardinal = krd.Kardinal()
-        with open(CONFIG_FILE) as json_file:
-            self.config = json.load(json_file)
+        self.analyze_type = analyze_type
+        self.disable_bb = int(disable_bb)
     
     def __del__(self):
         self.video.release()
@@ -24,9 +22,9 @@ class VideoCamera(object):
             curr_frame = self.video.get(cv2.CAP_PROP_POS_FRAMES)
             image = imutils.resize(image, width=640)
 
-            if self.config['mode'] == 2:
+            if self.disable_bb == 0 and self.analyze_type == 'reid':
                 image = self.kardinal.detected(image, curr_frame)
-            elif self.config['mode'] == 3:
+            elif self.disable_bb == 0 and self.analyze_type == 'counting':
                 image = self.kardinal.people_counting(image, curr_frame-1)
             
             ret, jpeg = cv2.imencode('.jpg', image)

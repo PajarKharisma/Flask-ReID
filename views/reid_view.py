@@ -24,9 +24,11 @@ def empty_dir(dir_name):
         if file != '.gitignore':
             os.remove('{}/{}'.format(dir_name, file))
 
-@app.route('/reid-analyze', methods=["GET", "POST"])
-def index_file():
+@app.route('/analyze/<analyze_type>', methods=["GET", "POST"])
+def index_file(analyze_type):
     data= {}
+    data['title'] = 'Person Re-Identification' if analyze_type=='reid' else 'People Counting'
+
     if request.method == 'POST':
         empty_dir(LIST_DIR)
         if request.form['video_src'] == '1':
@@ -43,7 +45,6 @@ def index_file():
             else:
                 flash('Extension not valid')
         elif request.form['video_src'] == '3':
-            print('masuk 3')
             filename = request.form['cctv']
         else:
             flash('Anda belum memilih sumber video')
@@ -51,13 +52,16 @@ def index_file():
         
         data['input_type'] = request.form['video_src']
         data['filename'] = filename
+        data['disable_bb'] = 1 if 'disable_bb' in request.form.keys() else 0
         
     # baca daftar cctv dari database
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cur.execute("SELECT cctvId, cctvName FROM ref_cctv")
     data['cctv_ids'] = cur.fetchall()
     cur.close()
-    return render_template('reid-person.html', data=data)
+
+    data['analyze_type'] = analyze_type
+    return render_template('reid-analyze.html', data=data)
 
 def gen(camera):
     while True:
@@ -69,8 +73,9 @@ def gen(camera):
             del camera
             break
 
-@app.route('/video_feed/<input_type>/<filename>')
-def video_feed(input_type, filename):
+@app.route('/video_feed/<analyze_type>/<disable_bb>/<input_type>/<filename>')
+def video_feed(analyze_type, disable_bb, input_type, filename):
+    print(analyze_type)
     if int(input_type) == 1:
         url_video = int(filename)
     elif int(input_type) == 2:
@@ -92,4 +97,4 @@ def video_feed(input_type, filename):
         else:
             url_video = cctv_data['cctvUrl']
     
-    return Response(gen(VideoCamera(url_video)), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(gen(VideoCamera(url_video, analyze_type, disable_bb)), mimetype='multipart/x-mixed-replace; boundary=frame')

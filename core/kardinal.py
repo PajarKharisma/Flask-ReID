@@ -223,7 +223,6 @@ class Kardinal():
                         self.databases.append(person_id)
                         self.curr_databases.append(person_id)
                         cv2.imwrite('{}/{}.jpg'.format(config.list_dir, person_id.get_label()), cv2.cvtColor(img_crop['img'], cv2.COLOR_RGB2BGR))
-                        print('Udah Nyimpen 1')
                     else:
                         min_dist = sys.float_info.max
                         sim_person = None
@@ -259,7 +258,6 @@ class Kardinal():
                             self.databases.append(new_person)
                             self.curr_databases.append(new_person)
                             cv2.imwrite('{}/{}.jpg'.format(config.list_dir, new_person.get_label()), cv2.cvtColor(img_crop['img'], cv2.COLOR_RGB2BGR))
-                            print('Udah Nyimpen 2')
             else:
                 self.databases.clear()
         for person in self.curr_databases:
