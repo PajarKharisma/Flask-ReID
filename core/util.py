@@ -25,7 +25,8 @@ def process_result(detection, obj_threshhold, nms_threshhold):
         pred_score = pred_score.unsqueeze(-1)
         pred_index = pred_index.float().unsqueeze(-1)
         bboxes = torch.cat((bboxes[:, :5], pred_score, pred_index), dim=1)
-        pred_classes = torch.unique(bboxes[:, -1])
+        with torch.no_grad():
+            pred_classes = torch.unique(bboxes[:, -1])
         # print(pred_classes)
 
         # non max suppression for each predicted class
@@ -45,7 +46,7 @@ def process_result(detection, obj_threshhold, nms_threshhold):
 
 
                 # add batch index as the first attribute
-                batch_idx_add = torch.full((bboxes_cls.size(0), 1), batchi)
+                batch_idx_add = torch.full((bboxes_cls.size(0), 1), batchi, dtype=torch.float)
                 bboxes_cls = torch.cat((batch_idx_add, bboxes_cls), dim=1)
                 output = torch.cat((output, bboxes_cls))
 

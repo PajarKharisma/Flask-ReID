@@ -2,10 +2,10 @@ import os
 import sys
 from flask import render_template, request, redirect, Response, flash, url_for
 from werkzeug.utils import secure_filename
-from flask_mysqldb import MySQL, MySQLdb
+# from flask_mysqldb import MySQL, MySQLdb
 
 from app import app
-from app import mysql
+# from app import mysql
 
 from core.camera import VideoCamera
 
@@ -55,10 +55,10 @@ def index_file(analyze_type):
         data['disable_bb'] = 1 if 'disable_bb' in request.form.keys() else 0
         
     # baca daftar cctv dari database
-    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cur.execute("SELECT cctvId, cctvName FROM ref_cctv")
-    data['cctv_ids'] = cur.fetchall()
-    cur.close()
+    # cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    # cur.execute("SELECT cctvId, cctvName FROM ref_cctv")
+    # data['cctv_ids'] = cur.fetchall()
+    # cur.close()
 
     data['analyze_type'] = analyze_type
     return render_template('reid-analyze.html', data=data)
